@@ -69,28 +69,53 @@
     ],
     "holesky": [
       {
+        "name": "cbETH",
+        "addr": "0x70EB4D3c164a6B4A5f908D4FBb5a9cAfFb66bAB6",
+        "multiplier": 10000
+      },
+      {
         "name": "stETH",
-        "addr": "0x3F1c547b21f65e10480dE3ad8E19fAAC46C95034",
+        "addr": "0x7D704507b76571a51d9caE8AdDAbBFd0ba0e63d3",
+        "multiplier": 10000
+      },
+      {
+        "name": "rETH",
+        "addr": "0x3A8fBdf9e77DFc25d09741f51d3E181b25d0c4E0",
         "multiplier": 10000
       },
       {
         "name": "ETHx",
-        "addr": "0x7F09ceb3874F5E35Cd2135F56fd4329b88c5d119",
+        "addr": "0x31B6F59e1627cEfC9fA174aD03859fC337666af7",
+        "multiplier": 10000
+      },
+      {
+        "name": "ankrETH",
+        "addr": "0x7673a47463F80c6a3553Db9E54c8cDcd5313d0ac",
         "multiplier": 10000
       },
       {
         "name": "WETH",
-        "addr": "0x94373a4919B3240D86eA41593D5eBa789FEF3848",
+        "addr": "0x80528D6e9A2BAbFc766965E0E26d5aB08D9CFaF9",
+        "multiplier": 10000
+      },
+      {
+        "name": "osETH",
+        "addr": "0x46281E3B7fDcACdBa44CADf069a94a588Fd4C6Ef",
         "multiplier": 10000
       },
       {
         "name": "sfrxETH",
-        "addr": "0xa63f56985F9C7F3bc9fFc5685535649e0C1a55f3",
+        "addr": "0x9281ff96637710Cd9A5CAcce9c6FAD8C9F54631c",
         "multiplier": 10000
       },
       {
         "name": "mETH",
-        "addr": "0xbe16244EAe9837219147384c8A7560BA14946262",
+        "addr": "0xaccc5A86732BE85b5012e8614AF237801636F8e5",
+        "multiplier": 10000
+      },
+      {
+        "name": "Beacon ETH",
+        "addr": "0xbeaC0eeEeeeeEEeEeEEEEeeEEeEeeeEeeEEBEaC0",
         "multiplier": 10000
       }
     ]
