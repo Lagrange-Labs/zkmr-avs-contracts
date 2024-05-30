@@ -69,6 +69,9 @@ interface IZKMRStakeRegistry {
     /// @notice Thrown when operator specifies an invalid public key on registration and key rotation
     error InvalidPublicKey();
 
+    /// @notice Thrown when operator tries to register a public key that has already been registered at any point in the past
+    error KeyHasBeenUsed();
+
     /// @notice Indicates the quorum is invalid
     error InvalidQuorum();
 
