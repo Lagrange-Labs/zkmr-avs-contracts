@@ -92,7 +92,7 @@ contract DeployAVS is BaseScript {
         address stakeRegistryProxy = proxyFactory.deployDeterministicAndCall(
             stakeRegistryImpl,
             owner,
-            newSalt("V0_EUCLID_SR_0"),
+            newSalt("V0_ZKMR_SR_0"),
             abi.encodeWithSelector(
                 ZKMRStakeRegistry.initialize.selector,
                 delegationManager,
@@ -106,7 +106,7 @@ contract DeployAVS is BaseScript {
         address serviceManagerProxy = proxyFactory.deployDeterministicAndCall(
             serviceManagerImpl,
             owner,
-            newSalt("V0_EUCLID_SM_0"),
+            newSalt("V0_ZKMR_SM_0"),
             abi.encodeWithSelector(
                 ZKMRServiceManager.initialize.selector,
                 avsDirectory,
