@@ -34,6 +34,10 @@ contract ZKMRServiceManager is IServiceManager, Ownable, Initializable {
         IZKMRStakeRegistry stakeRegistry_,
         address owner_
     ) external initializer {
+        require(address(avsDirectory_) != address(0), "not valid");
+        require(address(stakeRegistry_) != address(0), "not valid");
+        require(owner_ != address(0), "not valid");
+
         _avsDirectory = avsDirectory_;
         stakeRegistry = stakeRegistry_;
 

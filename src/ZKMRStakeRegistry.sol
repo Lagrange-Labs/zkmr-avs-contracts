@@ -79,6 +79,9 @@ contract ZKMRStakeRegistry is
         Quorum memory quorum_,
         address owner_
     ) external initializer {
+        require(delegationManager_ != address(0), "not valid");
+        require(owner_ != address(0), "not valid");
+
         delegationManager = IDelegationManager(delegationManager_);
         _updateQuorumConfig(quorum_);
         OwnableWhitelist._initialize(owner_);
