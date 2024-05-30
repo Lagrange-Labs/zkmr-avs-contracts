@@ -19,7 +19,7 @@ contract ZKMRServiceManager is IServiceManager, Ownable, Initializable {
     IAVSDirectory private _avsDirectory;
 
     /// @dev Reserves storage slots for future upgrades
-    uint256[50] private __gap;
+    uint256[48] private __gap;
 
     /// @notice when applied to a function, only allows the ZKMRStakeRegistry to call it
     modifier onlyStakeRegistry() {
