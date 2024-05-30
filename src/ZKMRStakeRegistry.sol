@@ -46,12 +46,19 @@ contract ZKMRStakeRegistry is
     /// @notice Stores the current quorum configuration
     Quorum private _quorum;
 
+    /// @notice Ensures unique registration of public keys
+    mapping(bytes32 publicKeyHash => bool used) private usedKeys;
+
     /// @dev Reserves storage slots for future upgrades
     uint256[50] private __gap;
 
     modifier ensureValidPublicKey(PublicKey calldata publicKey) {
         if (publicKey.x == 0 || publicKey.y == 0) {
             revert InvalidPublicKey();
+        }
+
+        if (_keyHasBeenUsed(publicKey)) {
+            revert KeyHasBeenUsed();
         }
         _;
     }
@@ -92,9 +99,8 @@ contract ZKMRStakeRegistry is
         onlyOwner
         onlyRegistered(operator)
     {
-        totalOperators--;
-        delete operators[operator];
-        serviceManager.deregisterOperatorFromAVS(operator);
+        _deregisterOperator(operator);
+
         emit OperatorEvicted(operator, address(serviceManager));
     }
 
@@ -107,14 +113,15 @@ contract ZKMRStakeRegistry is
         }
         totalOperators++;
         operators[msg.sender] = publicKey;
+        usedKeys[_pubkeyHash(publicKey)] = true;
         serviceManager.registerOperatorToAVS(msg.sender, operatorSignature);
+
         emit OperatorRegistered(msg.sender, address(serviceManager), publicKey);
     }
 
     function deregisterOperator() external onlyRegistered(msg.sender) {
-        totalOperators--;
-        delete operators[msg.sender];
-        serviceManager.deregisterOperatorFromAVS(msg.sender);
+        _deregisterOperator(msg.sender);
+
         emit OperatorDeregistered(msg.sender, address(serviceManager));
     }
 
@@ -124,6 +131,8 @@ contract ZKMRStakeRegistry is
         onlyRegistered(msg.sender)
     {
         operators[msg.sender] = publicKey;
+        usedKeys[_pubkeyHash(publicKey)] = true;
+
         emit OperatorUpdated(msg.sender, address(serviceManager), publicKey);
     }
 
@@ -143,6 +152,14 @@ contract ZKMRStakeRegistry is
 
     function isRegistered(address operator) external view returns (bool) {
         return _isRegistered(operator);
+    }
+
+    function keyHasBeenUsed(PublicKey memory publicKey)
+        external
+        view
+        returns (bool)
+    {
+        return _keyHasBeenUsed(publicKey);
     }
 
     function getOperatorShares(address operator)
@@ -194,6 +211,20 @@ contract ZKMRStakeRegistry is
         return operators[operator].x != 0;
     }
 
+    function _keyHasBeenUsed(PublicKey memory publicKey)
+        private
+        view
+        returns (bool)
+    {
+        return usedKeys[_pubkeyHash(publicKey)];
+    }
+
+    function _deregisterOperator(address operator) private {
+        totalOperators--;
+        delete operators[operator];
+        serviceManager.deregisterOperatorFromAVS(operator);
+    }
+
     /// @notice Updates the quorum configuration
     /// @dev Replaces the current quorum configuration with `newQuorum` if valid.
     /// Reverts with `InvalidQuorum` if the new quorum configuration is not valid.
@@ -236,5 +267,15 @@ contract ZKMRStakeRegistry is
         } else {
             return true;
         }
+    }
+
+    /// @dev Hash of x + y coordinates of operator's public key
+    /// @return bytes32 keccak256 hash of 32 bytes of X and 32 bytes of Y
+    function _pubkeyHash(PublicKey memory publicKey)
+        private
+        pure
+        returns (bytes32)
+    {
+        return keccak256(abi.encode(publicKey.x, publicKey.y));
     }
 }
