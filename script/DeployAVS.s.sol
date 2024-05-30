@@ -20,6 +20,8 @@ contract DeployAVS is BaseScript {
     address delegationManager = getDelegationManager();
     address avsDirectory = getAvsDirectory();
 
+    uint256 constant MINIMUM_SHARES = 1 ether;
+
     struct Deployment {
         ZKMRStakeRegistry stakeRegistryProxy;
         address stakeRegistryImpl;
@@ -95,7 +97,8 @@ contract DeployAVS is BaseScript {
                 ZKMRStakeRegistry.initialize.selector,
                 delegationManager,
                 getQuorum(),
-                owner
+                owner,
+                MINIMUM_SHARES
             )
         );
         print("ZKMRStakeRegistry (proxy)", address(stakeRegistryProxy));
