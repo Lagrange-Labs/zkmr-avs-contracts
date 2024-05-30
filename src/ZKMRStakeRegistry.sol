@@ -50,7 +50,7 @@ contract ZKMRStakeRegistry is
     mapping(bytes32 publicKeyHash => bool used) private usedKeys;
 
     /// @dev Reserves storage slots for future upgrades
-    uint256[50] private __gap;
+    uint256[43] private __gap;
 
     modifier ensureValidPublicKey(PublicKey calldata publicKey) {
         if (publicKey.x == 0 || publicKey.y == 0) {
