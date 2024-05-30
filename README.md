@@ -3,7 +3,7 @@ This repository contains smart contracts for the Eigenlayer AVS (zkMapReduce AVS
 
 ## Key structs and contracts
 ### StrategyParams
-Represents an Eigenlayer strategy and weight multiplier.
+Represents an Eigenlayer strategy and shares multiplier.
 
 ```solidity
 struct StrategyParams {
@@ -13,7 +13,7 @@ struct StrategyParams {
 ```
 
 ### Quorum
-Defines a quorum of Eigenlayer strategies (i.e. restaked tokens) and weight multipliers.
+Defines a quorum of Eigenlayer strategies (i.e. restaked tokens) and shares multipliers.
 
 ```solidity
 struct Quorum {
@@ -36,7 +36,6 @@ struct PublicKey {
 Interface for the ZKMR Stake Registry, which manages operator registrations, deregistrations, and quorum configurations.
 
 ```solidity
-Copy code
 interface IZKMRStakeRegistry {
     // Events
     event OperatorRegistered(address indexed operator, address indexed avs, PublicKey publicKey);
@@ -44,7 +43,7 @@ interface IZKMRStakeRegistry {
     event OperatorUpdated(address indexed operator, address indexed avs, PublicKey publicKey);
     event OperatorEvicted(address indexed operator, address indexed avs);
     event QuorumUpdated(Quorum oldQuorum, Quorum newQuorum);
-    event MinimumWeightUpdated(uint256 oldWeight, uint256 newWeight);
+    event MinimumSharesUpdated(uint256 oldShares, uint256 newShares);
 
     // Errors
     error ServiceManagerAlreadySet();
@@ -61,8 +60,7 @@ interface IZKMRStakeRegistry {
     function registerOperator(PublicKey calldata publicKey, ISignatureUtils.SignatureWithSaltAndExpiry memory operatorSignature) external;
     function deregisterOperator() external;
     function getOperatorShares(address operator) external view returns (uint256);
-    function getOperatorWeight(address operator) external view returns (uint256);
-    function updateMinimumWeight(uint256 newMinimumWeight) external;
+    function updateMinimumShares(uint256 newMinimumShares) external;
 }
 ```
 

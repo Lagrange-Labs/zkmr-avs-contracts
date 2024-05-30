@@ -25,7 +25,8 @@ contract ZKMRStakeRegistry is
     OwnableWhitelist,
     Initializable
 {
-    /// @dev The total amount of multipliers to weigh stakes
+    /// @notice The divisor of strategy multipliers, which are used to incentivize or punish stakes of particular strategies
+    /// @dev Multipliers for shares are absolute, rather than relative
     uint256 private constant BPS = 10_000;
 
     /// @notice Manages staking delegations through the DelegationManager interface
@@ -34,8 +35,9 @@ contract ZKMRStakeRegistry is
     /// @notice The size of the current operator set
     uint256 public totalOperators;
 
-    /// @notice Specifies the weight required to become an operator
-    uint256 public minimumWeight;
+    /// @notice Specifies the shares required to become an operator.
+    /// @dev Share count can include a strategy multiplier, which has basis points precision (BPS == divisor is 10,000)
+    uint256 public minimumShares;
 
     /// @notice Holds the address of the service manager
     IServiceManager public serviceManager;
@@ -63,6 +65,15 @@ contract ZKMRStakeRegistry is
         _;
     }
 
+    modifier ensureMinimumShares(address operator) {
+        uint256 shares = _getOperatorShares(operator);
+
+        if (shares < minimumShares) {
+            revert InsufficientShares();
+        }
+        _;
+    }
+
     modifier onlyRegistered(address operator) {
         if (!_isRegistered(operator)) {
             revert OperatorNotRegistered();
@@ -77,13 +88,15 @@ contract ZKMRStakeRegistry is
     function initialize(
         address delegationManager_,
         Quorum memory quorum_,
-        address owner_
+        address owner_,
+        uint256 minimumShares_
     ) external initializer {
         require(delegationManager_ != address(0), "not valid");
         require(owner_ != address(0), "not valid");
 
         delegationManager = IDelegationManager(delegationManager_);
         _updateQuorumConfig(quorum_);
+        _updateMinimumShares(minimumShares_);
         OwnableWhitelist._initialize(owner_);
     }
 
@@ -110,7 +123,12 @@ contract ZKMRStakeRegistry is
     function registerOperator(
         PublicKey calldata publicKey,
         ISignatureUtils.SignatureWithSaltAndExpiry calldata operatorSignature
-    ) external onlyWhitelist(msg.sender) ensureValidPublicKey(publicKey) {
+    )
+        external
+        onlyWhitelist(msg.sender)
+        ensureMinimumShares(msg.sender)
+        ensureValidPublicKey(publicKey)
+    {
         if (_isRegistered(msg.sender)) {
             revert OperatorAlreadyRegistered();
         }
@@ -143,10 +161,8 @@ contract ZKMRStakeRegistry is
         _updateQuorumConfig(quorum_);
     }
 
-    function updateMinimumWeight(uint256 newMinimumWeight) external onlyOwner {
-        uint256 oldMinimumWeight = minimumWeight;
-        minimumWeight = newMinimumWeight;
-        emit MinimumWeightUpdated(oldMinimumWeight, newMinimumWeight);
+    function updateMinimumShares(uint256 newMinimumShares) external onlyOwner {
+        _updateMinimumShares(newMinimumShares);
     }
 
     function quorum() external view returns (Quorum memory) {
@@ -170,18 +186,10 @@ contract ZKMRStakeRegistry is
         view
         returns (uint256)
     {
-        return _getOperatorShares(operator);
-    }
+        uint256 shares = _getOperatorShares(operator);
 
-    function getOperatorWeight(address operator)
-        external
-        view
-        returns (uint256)
-    {
-        uint256 weight = _getOperatorShares(operator) / BPS;
-
-        if (weight >= minimumWeight) {
-            return weight;
+        if (shares >= minimumShares) {
+            return shares;
         } else {
             return 0;
         }
@@ -207,7 +215,7 @@ contract ZKMRStakeRegistry is
             totalShares += shares[i] * strategyParams[i].multiplier;
         }
 
-        return totalShares;
+        return totalShares / BPS;
     }
 
     function _isRegistered(address operator) private view returns (bool) {
@@ -245,9 +253,14 @@ contract ZKMRStakeRegistry is
         emit QuorumUpdated(oldQuorum, newQuorum);
     }
 
+    function _updateMinimumShares(uint256 newMinimumShares) private {
+        uint256 oldMinimumShares = minimumShares;
+        minimumShares = newMinimumShares;
+        emit MinimumSharesUpdated(oldMinimumShares, newMinimumShares);
+    }
+
     /// @dev Verifies that a specified quorum configuration is valid. A valid quorum has:
-    ///      1. Weights that sum to exactly 10,000 basis points, ensuring proportional representation.
-    ///      2. Unique strategies without duplicates to maintain quorum integrity.
+    ///      1. Unique strategies without duplicates to maintain quorum integrity.
     /// @param quorum_ The quorum configuration to be validated.
     /// @return bool True if the quorum configuration is valid, otherwise false.
     function _isValidQuorum(Quorum memory quorum_)
@@ -258,18 +271,12 @@ contract ZKMRStakeRegistry is
         StrategyParams[] memory strategies = quorum_.strategies;
         address lastStrategy;
         address currentStrategy;
-        uint256 totalMultiplier;
         for (uint256 i; i < strategies.length; i++) {
             currentStrategy = address(strategies[i].strategy);
             if (lastStrategy >= currentStrategy) revert NotSorted();
             lastStrategy = currentStrategy;
-            totalMultiplier += strategies[i].multiplier;
         }
-        if (totalMultiplier != BPS) {
-            return false;
-        } else {
-            return true;
-        }
+        return true;
     }
 
     /// @dev Hash of x + y coordinates of operator's public key

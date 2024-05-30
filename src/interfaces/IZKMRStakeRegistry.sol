@@ -6,14 +6,14 @@ import {IStrategy} from
 import {ISignatureUtils} from
     "eigenlayer-contracts/src/contracts/interfaces/ISignatureUtils.sol";
 
-/// @notice An Eigenlayer strategy and weight multiplier
+/// @notice An Eigenlayer strategy and shares multiplier
 /// @dev A strategy is a contract that represent an underlying staked asset (ERC20)
 struct StrategyParams {
     IStrategy strategy;
     uint96 multiplier;
 }
 
-/// @notice A `quorum` of Eigenlayer strategies and weight multipliers
+/// @notice A `quorum` of Eigenlayer strategies and shares multipliers
 /// @dev An array of strategy parameters define the quorum
 struct Quorum {
     StrategyParams[] strategies;
@@ -58,10 +58,10 @@ interface IZKMRStakeRegistry {
     /// @param newQuorum The new quorum configuration
     event QuorumUpdated(Quorum oldQuorum, Quorum newQuorum);
 
-    /// @notice Emitted when the weight to join the operator set updates
-    /// @param oldWeight The previous minimum weight
-    /// @param newWeight The new minimumWeight
-    event MinimumWeightUpdated(uint256 oldWeight, uint256 newWeight);
+    /// @notice Emitted when the shares to join the operator set updates
+    /// @param oldShares The previous minimum shares
+    /// @param newShares The new minimumShares
+    event MinimumSharesUpdated(uint256 oldShares, uint256 newShares);
 
     /// @notice Thrown when setting the service manager address after it has already been set
     error ServiceManagerAlreadySet();
@@ -78,6 +78,9 @@ interface IZKMRStakeRegistry {
     /// @notice Indicates the system finds a list of items unsorted
     error NotSorted();
 
+    /// @notice Thrown when operator tries to register with less than minimum shares
+    error InsufficientShares();
+
     /// @notice Thrown when registering an already registered operator
     error OperatorAlreadyRegistered();
 
@@ -85,7 +88,7 @@ interface IZKMRStakeRegistry {
     error OperatorNotRegistered();
 
     /// @notice Retrieves the current stake quorum details.
-    /// @return Quorum - The current quorum of strategies and weights
+    /// @return Quorum - The current quorum of strategies and multipliers
     function quorum() external view returns (Quorum memory);
 
     /// @notice Checks registration status based on whether public key is set.
@@ -94,7 +97,7 @@ interface IZKMRStakeRegistry {
 
     /// @notice Updates the quorum configuration
     /// @dev Only callable by the contract owner.
-    /// @param _quorum The new quorum configuration, including strategies and their new weights
+    /// @param _quorum The new quorum configuration, including strategies and their new multipliers
     function updateQuorumConfig(Quorum memory _quorum) external;
 
     /// @notice Registers a new operator using a provided signature
@@ -116,16 +119,8 @@ interface IZKMRStakeRegistry {
         view
         returns (uint256);
 
-    /// @notice Calculates the current weight of an operator based on their delegated stake in the strategies considered in the quorum
-    /// @param operator The address of the operator.
-    /// @return uint256 - The current weight of the operator; returns 0 if below the threshold.
-    function getOperatorWeight(address operator)
-        external
-        view
-        returns (uint256);
-
-    /// @notice Updates the weight an operator must have to join the operator set
+    /// @notice Updates the shares an operator must have to join the operator set
     /// @dev Access controlled to the contract owner
-    /// @param newMinimumWeight The new weight an operator must have to join the operator set
-    function updateMinimumWeight(uint256 newMinimumWeight) external;
+    /// @param newMinimumShares The new shares an operator must have to join the operator set
+    function updateMinimumShares(uint256 newMinimumShares) external;
 }

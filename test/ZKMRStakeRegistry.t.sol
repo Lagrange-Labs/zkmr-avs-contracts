@@ -82,7 +82,9 @@ contract ZKMRStakeRegistryTest is ZKMRStakeRegistrySetup {
         });
 
         registry = new ZKMRStakeRegistry();
-        registry.initialize(address(mockDelegationManager), quorum, owner);
+        registry.initialize(
+            address(mockDelegationManager), quorum, owner, 0 ether
+        );
 
         startHoax(owner);
         registry.setServiceManager(address(mockServiceManager));
@@ -188,6 +190,19 @@ contract ZKMRStakeRegistryTest is ZKMRStakeRegistrySetup {
         startHoax(notOperator);
         vm.expectRevert(IZKMRStakeRegistry.KeyHasBeenUsed.selector);
         registry.registerOperator(publicKey1, signature);
+    }
+
+    function testRegisterOperator_RevertsWithInsufficientShares() public {
+        address underweightOperator = makeAddr("underweight-operator");
+        ISignatureUtils.SignatureWithSaltAndExpiry memory signature;
+
+        startHoax(owner);
+        registry.updateMinimumShares(1 ether);
+        registry.toggleWhitelist(underweightOperator);
+
+        startHoax(underweightOperator);
+        vm.expectRevert(IZKMRStakeRegistry.InsufficientShares.selector);
+        registry.registerOperator(newPublicKey, signature);
     }
 
     function testDeregisterOperator() public {
@@ -302,20 +317,6 @@ contract ZKMRStakeRegistryTest is ZKMRStakeRegistrySetup {
         registry.updateQuorumConfig(quorum);
     }
 
-    function testUpdateQuorumConfig_RevertsWithInvalidQuorum() public {
-        Quorum memory invalidQuorum =
-            Quorum({strategies: new StrategyParams[](1)});
-        invalidQuorum.strategies[0] = StrategyParams({
-            /// TODO: Make mock strategy
-            strategy: mockStrategy,
-            multiplier: 5_000 // This should cause the update to revert as it's not the total required
-        });
-
-        vm.expectRevert(IZKMRStakeRegistry.InvalidQuorum.selector);
-        hoax(owner);
-        registry.updateQuorumConfig(invalidQuorum);
-    }
-
     function testUpdateQuorumConfig_RevertsWithUnauthorized() public {
         Quorum memory validQuorum =
             Quorum({strategies: new StrategyParams[](1)});
@@ -354,59 +355,49 @@ contract ZKMRStakeRegistryTest is ZKMRStakeRegistrySetup {
         registry.updateQuorumConfig(validQuorum);
     }
 
-    function testUpdateQuorumConfig_RevertsWhenOverMultiplierTotal() public {
-        Quorum memory validQuorum =
-            Quorum({strategies: new StrategyParams[](1)});
-        validQuorum.strategies[0] =
-            StrategyParams({strategy: mockStrategy, multiplier: 10_001});
-        vm.expectRevert(IZKMRStakeRegistry.InvalidQuorum.selector);
-        hoax(owner);
-        registry.updateQuorumConfig(validQuorum);
-    }
+    function testUpdateMinimumShares() public {
+        uint256 initialMinimumShares = registry.minimumShares();
+        uint256 newMinimumShares = 5000;
 
-    function testUpdateMinimumWeight() public {
-        uint256 initialMinimumWeight = registry.minimumWeight();
-        uint256 newMinimumWeight = 5000;
-
-        assertEq(initialMinimumWeight, 0); // Assuming initial state is 0
+        assertEq(initialMinimumShares, 0); // Assuming initial state is 0
 
         hoax(owner);
-        registry.updateMinimumWeight(newMinimumWeight);
+        registry.updateMinimumShares(newMinimumShares);
 
-        uint256 updatedMinimumWeight = registry.minimumWeight();
-        assertEq(updatedMinimumWeight, newMinimumWeight);
+        uint256 updatedMinimumShares = registry.minimumShares();
+        assertEq(updatedMinimumShares, newMinimumShares);
     }
 
-    function testUpdateMinimumWeight_RevertsWithUnauthorized() public {
-        uint256 newMinimumWeight = 5000;
+    function testUpdateMinimumShares_RevertsWithUnauthorized() public {
+        uint256 newMinimumShares = 5000;
 
         hoax(notOwner);
         vm.expectRevert(Ownable.Unauthorized.selector);
-        registry.updateMinimumWeight(newMinimumWeight);
+        registry.updateMinimumShares(newMinimumShares);
     }
 
-    function testUpdateMinimumWeight_WithSameWeight() public {
-        uint256 initialMinimumWeight = 5000;
+    function testUpdateMinimumShares_WithSameShares() public {
+        uint256 initialMinimumShares = 5000;
 
         hoax(owner);
-        registry.updateMinimumWeight(initialMinimumWeight);
+        registry.updateMinimumShares(initialMinimumShares);
 
-        uint256 updatedMinimumWeight = registry.minimumWeight();
-        assertEq(updatedMinimumWeight, initialMinimumWeight);
+        uint256 updatedMinimumShares = registry.minimumShares();
+        assertEq(updatedMinimumShares, initialMinimumShares);
     }
 
-    function testUpdateMinimumWeight_WithZeroWeight() public {
-        uint256 initialMinimumWeight = 5000;
+    function testUpdateMinimumShares_WithZeroShares() public {
+        uint256 initialMinimumShares = 5000;
 
         hoax(owner);
-        registry.updateMinimumWeight(initialMinimumWeight);
+        registry.updateMinimumShares(initialMinimumShares);
 
-        uint256 newMinimumWeight = 0;
+        uint256 newMinimumShares = 0;
 
         hoax(owner);
-        registry.updateMinimumWeight(newMinimumWeight);
+        registry.updateMinimumShares(newMinimumShares);
 
-        uint256 updatedMinimumWeight = registry.minimumWeight();
-        assertEq(updatedMinimumWeight, newMinimumWeight);
+        uint256 updatedMinimumShares = registry.minimumShares();
+        assertEq(updatedMinimumShares, newMinimumShares);
     }
 }
