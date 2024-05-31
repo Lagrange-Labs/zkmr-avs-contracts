@@ -63,6 +63,18 @@ contract DeployAVS is BaseScript {
             address updatedServiceManagerImpl =
                 upgradeServiceManager(getDeployedServiceManager());
 
+            ZKMRStakeRegistry reg =
+                ZKMRStakeRegistry(getDeployedStakeRegistry());
+
+            reg.updateQuorumConfig(getQuorum());
+
+            ZKMRServiceManager sm =
+                ZKMRServiceManager(getDeployedServiceManager());
+            sm.updateAVSMetadataURI(
+                "https://github.com/Lagrange-Labs/zkmr-avs-contracts/blob/87f827aa63ad596c322b918ccd3b326fecfbc05f/config/avs-metadata.json"
+            );
+            reg.updateMinimumShares(1 ether);
+
             updateJson(updatedStakeRegistryImpl, updatedServiceManagerImpl);
         }
 
