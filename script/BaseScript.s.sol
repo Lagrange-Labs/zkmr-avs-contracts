@@ -155,7 +155,7 @@ abstract contract BaseScript is Script {
         addresses.serialize("stakeRegistryProxy", address(0));
         addresses.serialize("stakeRegistryImpl", address(0));
         addresses.serialize("serviceManagerProxy", address(0));
-        addresses.serialize("serviceManagerImpl", address(0));
+        addresses = addresses.serialize("serviceManagerImpl", address(0));
 
         string memory chainInfo = "chainInfo";
         chainInfo.serialize("chainId", uint256(0));
