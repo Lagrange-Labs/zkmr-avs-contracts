@@ -12,10 +12,6 @@ abstract contract BaseScript is Script {
         ? getDeployerAddress()
         : vm.rememberKey(vm.envUint("PRIVATE_KEY"));
 
-    // @dev The salt used for deterministic deployment addresses for LPNRegistryV0
-    bytes32 public salt =
-        isMainnet() ? newSalt("V0_EUCLID_0") : newSalt("V0_EUCLID_4");
-
     modifier broadcaster() {
         vm.startBroadcast();
         _;
@@ -159,7 +155,7 @@ abstract contract BaseScript is Script {
         addresses.serialize("stakeRegistryProxy", address(0));
         addresses.serialize("stakeRegistryImpl", address(0));
         addresses.serialize("serviceManagerProxy", address(0));
-        addresses.serialize("serviceManagerImpl", address(0));
+        addresses = addresses.serialize("serviceManagerImpl", address(0));
 
         string memory chainInfo = "chainInfo";
         chainInfo.serialize("chainId", uint256(0));

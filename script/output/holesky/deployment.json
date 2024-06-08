@@ -1,0 +1,12 @@
+{
+  "addresses": {
+    "serviceManagerImpl": "0x613131236ad266A71Ce853BF46C54Af884887ABe",
+    "serviceManagerProxy": "0xf98D5De1014110C65c51b85Ea55f73863215CC10",
+    "stakeRegistryImpl": "0x269d3e1D8570B44a3B408519f8f66448f3C268B7",
+    "stakeRegistryProxy": "0xf724cDC7C40fd6B59590C624E8F0E5E3843b4BE4"
+  },
+  "chainInfo": {
+    "chainId": 17000,
+    "deploymentBlock": 1575368
+  }
+}

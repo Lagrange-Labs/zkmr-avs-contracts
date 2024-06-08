@@ -31,3 +31,4 @@ local_deploy_erc1967_proxy_factory :; ${DEPLOY_PROXY_FACTORY_CMD} local ${LOCAL_
 # Deploy Eigenlayer AVS
 local_deploy_avs   :; ${DEPLOY_AVS_CMD} local ${LOCAL_DEPLOY_FLAGS}
 testnet_deploy_avs :; ${DEPLOY_AVS_CMD} holesky ${DEPLOY_FLAGS} --priority-gas-price 0.1gwei
+mainnet_deploy_avs :; ${DEPLOY_AVS_CMD} mainnet ${DEPLOY_FLAGS} --priority-gas-price 0.5gwei ${MAINNET_DEPLOYER}
