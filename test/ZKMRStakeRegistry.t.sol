@@ -146,7 +146,7 @@ contract ZKMRStakeRegistryTest is ZKMRStakeRegistrySetup {
         assertEq(publickeyX, newPublicKey.x);
         assertEq(publickeyY, newPublicKey.y);
 
-        assertTrue(registry.keyHasBeenUsed(newPublicKey));
+        assertTrue(registry.keyIsInUse(newPublicKey));
     }
 
     function testRegisterOperator_RevertsWhenNotWhitelisted() public {
@@ -181,14 +181,14 @@ contract ZKMRStakeRegistryTest is ZKMRStakeRegistrySetup {
         registry.registerOperator(PublicKey({x: 0, y: 0}), signature);
     }
 
-    function testRegisterOperator_RevertsWithKeyHasBeenUsed() public {
+    function testRegisterOperator_RevertsWithKeyIsInUse() public {
         ISignatureUtils.SignatureWithSaltAndExpiry memory signature;
 
         hoax(owner);
         registry.toggleWhitelist(notOperator);
 
         startHoax(notOperator);
-        vm.expectRevert(IZKMRStakeRegistry.KeyHasBeenUsed.selector);
+        vm.expectRevert(IZKMRStakeRegistry.KeyIsInUse.selector);
         registry.registerOperator(publicKey1, signature);
     }
 
@@ -205,6 +205,31 @@ contract ZKMRStakeRegistryTest is ZKMRStakeRegistrySetup {
         registry.registerOperator(newPublicKey, signature);
     }
 
+    function testOperator_CanRegisterDeregisterAndRegisterAgainWithSameKey()
+        public
+    {
+        ISignatureUtils.SignatureWithSaltAndExpiry memory signature;
+
+        // Operator is whitelisted and registered
+        assertTrue(registry.isRegistered(operator1));
+        (uint256 x1, uint256 y1) = registry.operators(operator1);
+        assertEq(x1, publicKey1.x);
+        assertEq(y1, publicKey1.y);
+
+        // Deregister operator1
+        hoax(operator1);
+        registry.deregisterOperator();
+        assertFalse(registry.isRegistered(operator1));
+
+        // Register again with the same key
+        hoax(operator1);
+        registry.registerOperator(publicKey1, signature);
+        assertTrue(registry.isRegistered(operator1));
+        (uint256 x3, uint256 y3) = registry.operators(operator1);
+        assertEq(x3, publicKey1.x);
+        assertEq(y3, publicKey1.y);
+    }
+
     function testDeregisterOperator() public {
         uint256 totalOperatorsBefore = registry.totalOperators();
 
@@ -219,7 +244,7 @@ contract ZKMRStakeRegistryTest is ZKMRStakeRegistrySetup {
         (uint256 publickeyX, uint256 publickeyY) = registry.operators(operator1);
         assertEq(publickeyX, 0);
         assertEq(publickeyY, 0);
-        assertTrue(registry.keyHasBeenUsed(publicKey1));
+        assertFalse(registry.keyIsInUse(publicKey1));
     }
 
     function testDeregisterOperator_RevertsWithNotRegistered() public {
@@ -242,7 +267,7 @@ contract ZKMRStakeRegistryTest is ZKMRStakeRegistrySetup {
         (uint256 publickeyX, uint256 publickeyY) = registry.operators(operator1);
         assertEq(publickeyX, 0);
         assertEq(publickeyY, 0);
-        assertTrue(registry.keyHasBeenUsed(publicKey1));
+        assertFalse(registry.keyIsInUse(publicKey1));
     }
 
     function testEvictOperator_RevertsWithNotOwner() public {
@@ -270,8 +295,8 @@ contract ZKMRStakeRegistryTest is ZKMRStakeRegistrySetup {
         assertEq(newkeyX, newPublicKey.x);
         assertEq(newkeyY, newPublicKey.y);
 
-        assertTrue(registry.keyHasBeenUsed(newPublicKey));
-        assertTrue(registry.keyHasBeenUsed(publicKey1));
+        assertTrue(registry.keyIsInUse(newPublicKey));
+        assertTrue(registry.keyIsInUse(publicKey1));
     }
 
     function testUpdateOperatorKey_RevertsWithNotRegistered() public {
@@ -292,9 +317,9 @@ contract ZKMRStakeRegistryTest is ZKMRStakeRegistrySetup {
         registry.updateOperatorKey(PublicKey({x: 0, y: 0}));
     }
 
-    function testUpdateOperatorKey_RevertsWithKeyHasBeenUsed() public {
+    function testUpdateOperatorKey_RevertsWithKeyIsInUse() public {
         startHoax(operator1);
-        vm.expectRevert(IZKMRStakeRegistry.KeyHasBeenUsed.selector);
+        vm.expectRevert(IZKMRStakeRegistry.KeyIsInUse.selector);
         registry.updateOperatorKey(publicKey2);
     }
 

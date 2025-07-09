@@ -59,8 +59,8 @@ contract ZKMRStakeRegistry is
             revert InvalidPublicKey();
         }
 
-        if (_keyHasBeenUsed(publicKey)) {
-            revert KeyHasBeenUsed();
+        if (_keyIsInUse(publicKey)) {
+            revert KeyIsInUse();
         }
         _;
     }
@@ -173,12 +173,12 @@ contract ZKMRStakeRegistry is
         return _isRegistered(operator);
     }
 
-    function keyHasBeenUsed(PublicKey memory publicKey)
+    function keyIsInUse(PublicKey memory publicKey)
         external
         view
         returns (bool)
     {
-        return _keyHasBeenUsed(publicKey);
+        return _keyIsInUse(publicKey);
     }
 
     function getOperatorShares(address operator)
@@ -222,7 +222,7 @@ contract ZKMRStakeRegistry is
         return operators[operator].x != 0;
     }
 
-    function _keyHasBeenUsed(PublicKey memory publicKey)
+    function _keyIsInUse(PublicKey memory publicKey)
         private
         view
         returns (bool)
@@ -232,6 +232,7 @@ contract ZKMRStakeRegistry is
 
     function _deregisterOperator(address operator) private {
         totalOperators--;
+        delete usedKeys[_pubkeyHash(operators[operator])];
         delete operators[operator];
         serviceManager.deregisterOperatorFromAVS(operator);
     }
