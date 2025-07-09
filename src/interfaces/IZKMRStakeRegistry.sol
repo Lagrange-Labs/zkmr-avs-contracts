@@ -70,7 +70,7 @@ interface IZKMRStakeRegistry {
     error InvalidPublicKey();
 
     /// @notice Thrown when operator tries to register a public key that has already been registered at any point in the past
-    error KeyHasBeenUsed();
+    error KeyIsInUse();
 
     /// @notice Indicates the quorum is invalid
     error InvalidQuorum();
